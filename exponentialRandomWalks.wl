@@ -14,55 +14,88 @@ pointVisualizer[n_, b_, p_]:=ListPlot[ReIm /@ expSumList[n,b, p], PlotStyle->{Po
 (* Master manipulate code *)
 
 mastermanip[] :=
-Manipulate[
-SeedRandom[seed];
-kmax=N[Log[2,maxSteps]];
-If[k>kmax,k=kmax];(*out of range error trick*)
-kdelta=0.1;
-colorlist=Table[Hue[0.25+i/maxSteps],{i,1,maxSteps}];
-currentsteps=Floor[2^k];
-irr={Pi,E,GoldenRatio->"\[CurlyPhi]",Pi^2,Log[2]->"ln(2)",Sqrt[2],Sqrt[3]};
-points=ReIm/@twistExpSumList[maxSteps,b,p,q];
-currentpoints=Take[points,maxSteps-currentsteps+1];
-maxRange=If[scale,1.1*Max[Abs[points]],1.1*Max[Abs[currentpoints]]];
-bgcolor=If[color,Black,White];
-labelcolor = If[color, Yellow, Black];
-plotlabel = Row[{"Exponential Sum Walk with b = ", b, ", p = ", p, ", q = ", q}];
+Manipulate[SeedRandom[seed];
 
-Graphics[
-{Thick,If[color,Line[currentpoints,VertexColors->colorlist],
-Line[currentpoints]]},
-Axes->True,
+(* prevents out-of-range errors for currentSteps *)
+If[currentSteps > maxSteps, currentSteps = maxSteps];
+
+
+
+(* setup code and definitions *)
+colorList=Table[Hue[0.25+i/maxSteps],{i,1,maxSteps}];
+
+irrationals = {Pi, E, GoldenRatio -> "\[CurlyPhi]", Pi^2, Log[2] -> "ln(2)", Sqrt[2], Sqrt[3]};
+
+allPoints=ReIm /@ twistExpSumList[maxSteps,b,p,q];
+
+currentPoints = Take[allPoints, maxSteps - currentSteps + 1];
+
+plotlabel=Row[{"Sum-of-Digit Fractal with b = ",b,", p = ",p,", q = ",q}];
+
+(* plot range scales with animation or stays fixed, depending on user choice *)
+maxRange=If[scaleBoolean,
+1.1*Max[Abs[allPoints]],
+1.1*Max[Abs[currentPoints]]
+];
+
+backgroundColor=If[colorBoolean,Black,White];
+
+
+
+(*graphics options*)
+Graphics[{Thick,
+If[colorBoolean, 
+Line[currentPoints,VertexColors->colorList], 
+Line[currentPoints]
+]},
+
+Axes->axesBoolean,
+
 ImageSize->Large,
-Background->bgcolor,
+
+Background->backgroundColor,
+
 PlotRange->{{-maxRange,maxRange},{-maxRange,maxRange}},
-PlotLabel->Style[plotlabel,15,labelcolor]
+
+PlotLabel-> Style[plotlabel, 15, If[colorBoolean, Yellow, Black]]
 ],
 
-{{maxSteps,1500},{100,1500,3000,5000},SetterBar},
-Control@{{k,1,"animate"},kmax,1,-kdelta,Trigger},
-{{color,True},{True,False},Checkbox},
-{{scale,False,"fixed scale"},{True,False},Checkbox},
+
+
+(* user interface options *)
+{{maxSteps, 1000, "steps"}, {100, 1000, 3000, 10000}, SetterBar},
+
+{{colorBoolean, True, "color"}, {True, False}, Checkbox},
+
+{{axesBoolean, True, "show axes"}, {True, False}, Checkbox},
+
+{{scaleBoolean, False, "fixed scale"}, {True, False}, Checkbox},
+
+Control@{{currentSteps,1,"animate"},maxSteps,1,-1,Trigger},
+
 
 Delimiter,
-Style["base", 13],
-{{b,2,""},2,12,1,SetterBar},
+(* control for b *)
+Style["base", Bold],
+{{b, 3, ""},2,12,1,SetterBar},
+
 
 Delimiter,
-Style["control p", 13],
-(* Controls for p *)
-{{p,3, ""},2,12,1,SetterBar},
-{{p, Pi, ""},irr,SetterBar},
-Button[Style["Randomize p",FontColor->Black],seed++;p=RandomReal[{3,10}],ImageSize->200],
+Style["parameter p", Bold],
+(* controls for p *)
+{{p, 5, ""},2,12,1,SetterBar},
+{{p, Pi, ""}, irrationals, SetterBar},
+Row[{Spacer[55], Button[Style["Randomize", FontColor -> Black], seed++;p=RandomReal[{3, 10}],ImageSize -> 100]}],
+
 
 Delimiter,
-Style["control q", 13],
-(* Controls for q *)
-Control@{{q,3, ""},2,12,1,SetterBar},
-{{q,Pi, ""},irr,SetterBar},
-Button[Style["Randomize q",FontColor->Black],seed++;q=RandomReal[{3,10}],ImageSize->200],
-{seed,1,1000,1,ControlType->None},
-ControlPlacement->Left
+Style["parameter q", Bold],
+(* controls for q *)
+{{q, 3, ""}, 1,12,1,SetterBar},
+{{q, Pi, ""}, irrationals, SetterBar},
+Row[{Spacer[55], Button[Style["Randomize", FontColor -> Black], seed++;q=RandomReal[{3, 10}],ImageSize -> 100]}],
+
+{seed,1,1000,1,ControlType -> None}
 ];
 
 
