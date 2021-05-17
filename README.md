@@ -1,2 +1,2 @@
-# exponential-random-walks
-Random sum-of-digit exponential walks visualized with Mathematica. 
+# sum-of-digit-fractals
+Random sum-of-digit exponential fractals visualized with Mathematica. 
